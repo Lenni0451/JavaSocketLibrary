@@ -23,6 +23,7 @@ public class ClientConnection {
 	private PrivateKey decryptionKey = null;
 	private PublicKey encryptionKey = null;
 	
+	private long latency = -1;
 	private boolean terminated = false;
 	
 	public ClientConnection(final SocketServer server, final Socket socket) {
@@ -65,6 +66,14 @@ public class ClientConnection {
 		return false;
 	}
 	
+	public void updateLatency(final long latency) {
+		this.latency = latency;
+	}
+	
+	public long getLatency() {
+		return this.latency;
+	}
+	
 	
 	public void setDecryptionKey(final PrivateKey decryptionKey) {
 		if(this.encryptionKey != null) {
@@ -92,7 +101,7 @@ public class ClientConnection {
 
 	
 	public void sendRawPacket(byte[] data) throws IOException {
-		if(!this.terminated) {
+		if(this.terminated) {
 			throw new IllegalStateException("Client connection has been terminated");
 		}
 		
@@ -108,7 +117,7 @@ public class ClientConnection {
 	}
 	
 	public void sendPacket(final IPacket packet) {
-		if(!this.terminated) {
+		if(this.terminated) {
 			throw new IllegalStateException("Client connection has been terminated");
 		}
 		

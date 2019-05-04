@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.Lenni0451.JavaSocketLib.packets.impl.PingPacket;
 import net.Lenni0451.JavaSocketLib.server.ClientConnection;
 
 public class PacketRegister {
@@ -21,15 +22,27 @@ public class PacketRegister {
 	}
 	
 	private void registerDefaults() {
-		this.addPacket("ListPacket", ListPacket.class);
+		//System packets:
+		this.packetTypes.put('\0' + "PingPacket", PingPacket.class);
+		
+		//Other packets
+		this.packetTypes.put("ListPacket", ListPacket.class);
 	}
 	
 	
 	public void addPacket(final String label, final Class<? extends IPacket> packetClass) {
+		if(label.startsWith("\0")) {
+			throw new IllegalArgumentException("Can not add a system packet");
+		}
+		
 		this.packetTypes.put(label, packetClass);
 	}
 	
 	public void removePacket(final String label) {
+		if(label.startsWith("\0")) {
+			throw new IllegalArgumentException("Can not remove a system packet");
+		}
+		
 		this.packetTypes.remove(label);
 	}
 	

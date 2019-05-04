@@ -13,9 +13,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import net.Lenni0451.JavaSocketLib.packets.IPacket;
 import net.Lenni0451.JavaSocketLib.packets.PacketRegister;
+import net.Lenni0451.JavaSocketLib.packets.impl.PingPacket;
 import net.Lenni0451.JavaSocketLib.utils.RSACrypter;
 
 public class SocketServer {
@@ -25,6 +28,8 @@ public class SocketServer {
 	private int maxPacketSize = 32767;
 	
 	private Thread socketAcceptor;
+	private Timer timer;
+	private TimerTask pingTimer;
 	
 	private Map<ClientConnection, Thread> clients;
 	private List<ServerEventListener> eventListener;
@@ -84,7 +89,7 @@ public class SocketServer {
 									
 									onRawPacketReceive(clientConnection, packet);
 								} catch (Exception e) {
-									if(e instanceof EOFException || (e instanceof SocketException && (e.getMessage().equalsIgnoreCase("Socket closed") || e.getMessage().equalsIgnoreCase("Connection reset")))) {
+									if(e instanceof EOFException || e instanceof SocketException) {
 										;
 									} else {
 										new IOException("Could not receive packet for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
@@ -107,6 +112,18 @@ public class SocketServer {
 			}
 		});
 		this.socketAcceptor.start();
+		
+		this.timer = new Timer();
+		this.timer.schedule(this.pingTimer = new TimerTask() {
+			@Override
+			public void run() {
+				for(ClientConnection clientConnection : clients.keySet()) {
+					if(clientConnection.getEncryptionKey() != null && clientConnection.getDecryptionKey() != null) {
+						clientConnection.sendPacket(new PingPacket(System.currentTimeMillis()));
+					}
+				}
+			}
+		}, 0, 10000);
 	}
 	
 	public void stop() throws IOException {
@@ -114,6 +131,7 @@ public class SocketServer {
 		this.socket.close();
 		
 		//Cleanup
+		this.pingTimer.cancel();
 		for(ClientConnection clientConnection : this.clients.keySet()) {
 			clientConnection.terminateConnection();
 		}
@@ -153,7 +171,7 @@ public class SocketServer {
 			clientConnection.setDecryptionKey(keyPair.getPrivate());
 			clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
 		} catch (Exception e) {
-			new IOException("Could not send encryption key to client").printStackTrace();
+			new IOException("Could not send encryption key to client", e).printStackTrace();
 		}
 	}
 	
@@ -201,22 +219,17 @@ public class SocketServer {
 			}
 		}
 		
-		{ //Call event
-			for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
-				try {
-					serverEventListener.onRawPacketReceive(clientConnection, packet);
-				} catch (Throwable t) {
-					new Exception("Unhandled exception in server event listener", t).printStackTrace();
-				}
-			}
-		}
-		
 		try {
 			DataInputStream dis = new DataInputStream(new ByteArrayInputStream(packet));
 			String packetLabel = dis.readUTF();
 			Class<? extends IPacket> packetClass = this.packetRegister.getPacketClass(packetLabel);
 			IPacket packetObject = packetClass.newInstance();
 			packetObject.readPacketData(dis);
+			
+			if(packetObject instanceof PingPacket) {
+				clientConnection.updateLatency(System.currentTimeMillis() - ((PingPacket) packetObject).getSystemTime());
+				return;
+			}
 			
 			{ //Call event
 				for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
@@ -227,7 +240,17 @@ public class SocketServer {
 					}
 				}
 			}
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			{ //Call event
+				for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
+					try {
+						serverEventListener.onRawPacketReceive(clientConnection, packet);
+					} catch (Throwable t) {
+						new Exception("Unhandled exception in server event listener", t).printStackTrace();
+					}
+				}
+			}
+		}
 	}
 	
 	

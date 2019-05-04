@@ -17,6 +17,7 @@ import java.util.List;
 
 import net.Lenni0451.JavaSocketLib.packets.IPacket;
 import net.Lenni0451.JavaSocketLib.packets.PacketRegister;
+import net.Lenni0451.JavaSocketLib.packets.impl.PingPacket;
 import net.Lenni0451.JavaSocketLib.utils.RSACrypter;
 
 public class SocketClient {
@@ -50,6 +51,7 @@ public class SocketClient {
 		}
 		
 		this.socket = new Socket();
+		this.socket.setSoTimeout(20000);
 		this.socket.connect(new InetSocketAddress(this.ip, this.port));
 		this.dataInputStream = new DataInputStream(this.socket.getInputStream());
 		this.dataOutputStream = new DataOutputStream(this.socket.getOutputStream());
@@ -72,7 +74,7 @@ public class SocketClient {
 					
 					this.onPacketReceive(packet);
 				} catch (Exception e) {
-					if(e instanceof EOFException || (e instanceof SocketException && (e.getMessage().equalsIgnoreCase("Socket closed") || e.getMessage().equalsIgnoreCase("Connection reset")))) {
+					if(e instanceof EOFException || e instanceof SocketException) {
 						;
 					} else {
 						new IOException("Could not receive packet", e).printStackTrace();
@@ -175,22 +177,17 @@ public class SocketClient {
 			}
 		}
 		
-		{ //Call event
-			for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
-				try {
-					clientEventListener.onRawPacketReceive(packet);
-				} catch (Throwable t) {
-					new Exception("Unhandled exception in client event listener", t).printStackTrace();
-				}
-			}
-		}
-		
 		try {
 			DataInputStream dis = new DataInputStream(new ByteArrayInputStream(packet));
 			String packetLabel = dis.readUTF();
 			Class<? extends IPacket> packetClass = this.packetRegister.getPacketClass(packetLabel);
 			IPacket packetObject = packetClass.newInstance();
 			packetObject.readPacketData(dis);
+			
+			if(packetObject instanceof PingPacket) {
+				this.sendPacket(packetObject);
+				return;
+			}
 			
 			{ //Call event
 				for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
@@ -201,7 +198,17 @@ public class SocketClient {
 					}
 				}
 			}
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			{ //Call event
+				for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
+					try {
+						clientEventListener.onRawPacketReceive(packet);
+					} catch (Throwable t) {
+						new Exception("Unhandled exception in client event listener", t).printStackTrace();
+					}
+				}
+			}
+		}
 	}
 	
 	
