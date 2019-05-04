@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.Lenni0451.JavaSocketLib.server.ClientConnection;
+
 public class PacketRegister {
 	
 	private final Map<String, Class<? extends IPacket>> packetTypes;
@@ -54,6 +56,10 @@ public class PacketRegister {
 	}
 	
 	public void callPacketExecutor(final IPacket packet) {
+		this.callPacketExecutor(null, packet);
+	}
+	
+	public void callPacketExecutor(final ClientConnection clientConnection, final IPacket packet) {
 		for(Object packetExecutor : this.packetExecutor) {
 			try {
 				Class<?> executorClass = ((packetExecutor instanceof Class)?((Class<?>) packetExecutor):(packetExecutor.getClass()));
@@ -62,10 +68,14 @@ public class PacketRegister {
 					Class<?>[] parameter = method.getParameterTypes();
 					if(parameter.length == 1 && parameter[0].equals(packet.getClass())) {
 						method.invoke(executorInstance, packet);
+					} else if(parameter.length == 2 && parameter[0].equals(ClientConnection.class) && parameter[1].equals(packet.getClass())) {
+						method.invoke(executorInstance, clientConnection, packet);
 					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			} catch (NullPointerException e) {
+				;
+			} catch (Throwable t) {
+				new Exception("Unhandled exception in packet executor", t).printStackTrace();
 			}
 		}
 	}

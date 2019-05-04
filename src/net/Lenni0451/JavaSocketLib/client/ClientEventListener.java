@@ -8,7 +8,6 @@ public abstract class ClientEventListener {
 	public void onConnectionEstablished() {}
 	public void onDisconnect() {}
 	
-	public void onEncryptionResponse() {}
 	public void onRawPacketReceive(final byte[] packet) {}
 	public void onPacketReceive(final IPacket packet) {}
 	

@@ -232,7 +232,7 @@ public class SocketServer {
 	
 	
 	public ClientConnection[] getClients() {
-		return this.clients.entrySet().toArray(new ClientConnection[0]);
+		return this.clients.keySet().toArray(new ClientConnection[0]);
 	}
 	
 	public void broadcastRawPacket(final byte[] packet) {

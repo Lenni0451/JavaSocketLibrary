@@ -35,7 +35,7 @@ public class SocketClient {
 	private PrivateKey decryptionKey;
 	
 	private PacketRegister packetRegister;
-	
+
 	public SocketClient(final String ip, final int port) {
 		this.ip = ip;
 		this.port = port;
@@ -45,7 +45,7 @@ public class SocketClient {
 	}
 	
 	public void connect() throws IOException {
-		if(this.socket != null && this.socket.isConnected()) {
+		if(this.isConnected()) {
 			throw new IllegalStateException("Client socket is already connected to address " + this.ip);
 		}
 		
@@ -102,6 +102,10 @@ public class SocketClient {
 		} catch (Exception e) {}
 	}
 	
+	public boolean isConnected() {
+		return this.socket != null && this.socket.isConnected() && this.packetListener.isAlive() && !this.packetListener.isInterrupted();
+	}
+	
 	public void addEventListener(final ClientEventListener clientEventListener) {
 		this.eventListener.add(clientEventListener);
 	}
@@ -125,6 +129,9 @@ public class SocketClient {
 		} catch (Exception e) {}
 		this.packetListener.interrupt();
 		
+		this.encryptionKey = null;
+		this.decryptionKey = null;
+		
 		{ //Call event
 			for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
 				try {
@@ -147,7 +154,7 @@ public class SocketClient {
 				{ //Call event
 					for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
 						try {
-							clientEventListener.onEncryptionResponse();
+							clientEventListener.onConnectionEstablished();
 						} catch (Throwable t) {
 							new Exception("Unhandled exception in client event listener", t).printStackTrace();
 						}
@@ -199,6 +206,10 @@ public class SocketClient {
 	
 	
 	public void sendRawPacket(byte[] data) throws IOException {
+		if(!this.isConnected()) {
+			throw new IllegalStateException("Client is not connected to a server");
+		}
+		
 		if(this.encryptionKey != null) {
 			try {
 				data = RSACrypter.encrypt(this.encryptionKey, data);
@@ -211,6 +222,10 @@ public class SocketClient {
 	}
 	
 	public void sendPacket(final IPacket packet) {
+		if(!this.isConnected()) {
+			throw new IllegalStateException("Client is not connected to a server");
+		}
+		
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(baos);
