@@ -33,6 +33,7 @@ public class SocketClient {
 	private Thread packetListener;
 	private List<ClientEventListener> eventListener;
 	
+	private boolean useEncryption;
 	private PublicKey encryptionKey;
 	private PrivateKey decryptionKey;
 	
@@ -41,6 +42,7 @@ public class SocketClient {
 	public SocketClient(final String ip, final int port) {
 		this.ip = ip;
 		this.port = port;
+		this.useEncryption = true;
 		
 		this.eventListener = new ArrayList<>();
 		this.packetRegister = new PacketRegister();
@@ -52,7 +54,6 @@ public class SocketClient {
 		}
 		
 		this.socket = new Socket();
-		this.socket.setSoTimeout(20000);
 		this.socket.setTcpNoDelay(true);
 		this.socket.connect(new InetSocketAddress(this.ip, this.port));
 		this.dataInputStream = new DataInputStream(this.socket.getInputStream());
@@ -120,6 +121,10 @@ public class SocketClient {
 		return this.maxPacketSize;
 	}
 	
+	public boolean isUsingEncryption() {
+		return this.useEncryption;
+	}
+	
 	public PacketRegister getPacketRegister() {
 		return this.packetRegister;
 	}
@@ -146,8 +151,12 @@ public class SocketClient {
 	}
 	
 	private void onPacketReceive(byte[] packet) {
-		if(this.encryptionKey == null) {
+		if(this.encryptionKey == null && this.useEncryption) {
 			try {
+				if(packet.length == 1) {
+					this.useEncryption = false;
+					return;
+				}
 				KeyPair keyPair = RSACrypter.generateKeyPair(2048);
 				this.sendRawPacket(keyPair.getPublic().getEncoded());
 				this.decryptionKey = keyPair.getPrivate();
@@ -169,7 +178,7 @@ public class SocketClient {
 			return;
 		}
 		
-		if(this.decryptionKey != null) {
+		if(this.decryptionKey != null && this.useEncryption) {
 			try {
 				packet = RSACrypter.decrypt(this.decryptionKey, packet);
 			} catch (Exception e) {
@@ -217,7 +226,7 @@ public class SocketClient {
 			throw new IllegalStateException("Client is not connected to a server");
 		}
 		
-		if(this.encryptionKey != null) {
+		if(this.encryptionKey != null && this.useEncryption) {
 			try {
 				data = RSACrypter.encrypt(this.encryptionKey, data);
 			} catch (Exception e) {
