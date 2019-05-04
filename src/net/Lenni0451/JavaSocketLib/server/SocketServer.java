@@ -180,7 +180,7 @@ public class SocketServer {
 				{ //Call event
 					for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
 						try {
-							serverEventListener.onEncryptionResponse(clientConnection);
+							serverEventListener.onSocketConnectionEstablished(clientConnection);
 						} catch (Throwable t) {
 							new Exception("Unhandled exception in server event listener", t).printStackTrace();
 						}

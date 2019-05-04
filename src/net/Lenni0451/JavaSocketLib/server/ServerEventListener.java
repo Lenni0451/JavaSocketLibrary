@@ -8,7 +8,6 @@ public abstract class ServerEventListener {
 	public void onSocketConnectionEstablished(final ClientConnection client) {}
 	public void onSocketDisconnect(final ClientConnection client) {}
 	
-	public void onEncryptionResponse(final ClientConnection client) {}
 	public void onRawPacketReceive(final ClientConnection client, final byte[] packet) {}
 	public void onPacketReceive(final ClientConnection client, final IPacket packet) {}
 	
