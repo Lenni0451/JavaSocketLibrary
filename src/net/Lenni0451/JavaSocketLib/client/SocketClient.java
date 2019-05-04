@@ -72,7 +72,7 @@ public class SocketClient {
 					
 					this.onPacketReceive(packet);
 				} catch (Exception e) {
-					if(e instanceof EOFException || (e instanceof SocketException && e.getMessage().equalsIgnoreCase("Socket closed"))) {
+					if(e instanceof EOFException || (e instanceof SocketException && (e.getMessage().equalsIgnoreCase("Socket closed") || e.getMessage().equalsIgnoreCase("Connection reset")))) {
 						;
 					} else {
 						new IOException("Could not receive packet", e).printStackTrace();

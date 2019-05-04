@@ -84,7 +84,7 @@ public class SocketServer {
 									
 									onRawPacketReceive(clientConnection, packet);
 								} catch (Exception e) {
-									if(e instanceof EOFException || (e instanceof SocketException && e.getMessage().equalsIgnoreCase("Socket closed"))) {
+									if(e instanceof EOFException || (e instanceof SocketException && (e.getMessage().equalsIgnoreCase("Socket closed") || e.getMessage().equalsIgnoreCase("Connection reset")))) {
 										;
 									} else {
 										new IOException("Could not receive packet for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();

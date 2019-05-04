@@ -23,6 +23,8 @@ public class ClientConnection {
 	private PrivateKey decryptionKey = null;
 	private PublicKey encryptionKey = null;
 	
+	private boolean terminated = false;
+	
 	public ClientConnection(final SocketServer server, final Socket socket) {
 		this.server = server;
 		this.socket = socket;
@@ -31,6 +33,7 @@ public class ClientConnection {
 			this.dataInputStream = new DataInputStream(socket.getInputStream());
 			this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
 		} catch (Exception e) {
+			this.terminateConnection();
 			throw new IllegalStateException("Socket is closed or not ready yet", e);
 		}
 	}
@@ -52,6 +55,7 @@ public class ClientConnection {
 	}
 	
 	public boolean terminateConnection() {
+		this.terminated = true;
 		try {
 			this.dataInputStream.close();
 			this.dataOutputStream.close();
@@ -88,6 +92,10 @@ public class ClientConnection {
 
 	
 	public void sendRawPacket(byte[] data) throws IOException {
+		if(!this.terminated) {
+			throw new IllegalStateException("Client connection has been terminated");
+		}
+		
 		if(this.encryptionKey != null) {
 			try {
 				data = RSACrypter.encrypt(this.encryptionKey, data);
@@ -100,6 +108,10 @@ public class ClientConnection {
 	}
 	
 	public void sendPacket(final IPacket packet) {
+		if(!this.terminated) {
+			throw new IllegalStateException("Client connection has been terminated");
+		}
+		
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(baos);
