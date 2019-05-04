@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,12 +89,10 @@ public class SocketServer {
 									dataInputStream.read(packet);
 									
 									onRawPacketReceive(clientConnection, packet);
+								} catch (EOFException | SocketException | SocketTimeoutException e) {
+									;
 								} catch (Exception e) {
-									if(e instanceof EOFException || e instanceof SocketException) {
-										;
-									} else {
-										new IOException("Could not receive packet for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
-									}
+									new IOException("Could not receive packet for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
 									break;
 								}
 							}

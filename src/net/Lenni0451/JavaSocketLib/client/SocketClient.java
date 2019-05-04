@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -52,6 +53,7 @@ public class SocketClient {
 		
 		this.socket = new Socket();
 		this.socket.setSoTimeout(20000);
+		this.socket.setTcpNoDelay(true);
 		this.socket.connect(new InetSocketAddress(this.ip, this.port));
 		this.dataInputStream = new DataInputStream(this.socket.getInputStream());
 		this.dataOutputStream = new DataOutputStream(this.socket.getOutputStream());
@@ -73,12 +75,10 @@ public class SocketClient {
 					dataInputStream.read(packet);
 					
 					this.onPacketReceive(packet);
+				} catch (EOFException | SocketException | SocketTimeoutException e) {
+					;
 				} catch (Exception e) {
-					if(e instanceof EOFException || e instanceof SocketException) {
-						;
-					} else {
-						new IOException("Could not receive packet", e).printStackTrace();
-					}
+					new IOException("Could not receive packet", e).printStackTrace();
 					break;
 				}
 			}
