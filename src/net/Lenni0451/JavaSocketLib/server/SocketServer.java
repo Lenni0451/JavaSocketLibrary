@@ -100,7 +100,6 @@ public class SocketServer {
 						}
 					});
 					clientListener.start();
-					this.onClientConnect(clientConnection);
 				} catch (Exception e) {
 					if(e instanceof EOFException || (e instanceof SocketException && e.getMessage().equalsIgnoreCase("Socket closed"))) {
 						;
@@ -161,25 +160,6 @@ public class SocketServer {
 	
 	public PacketRegister getPacketRegister() {
 		return this.packetRegister;
-	}
-	
-	
-	private void onClientConnect(final ClientConnection clientConnection) {
-//		if(this.useEncryption) {
-//			try {
-//				KeyPair keyPair = RSACrypter.generateKeyPair(2048);
-//				clientConnection.setDecryptionKey(keyPair.getPrivate());
-//				clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
-//			} catch (Exception e) {
-//				new IOException("Could not send encryption key to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
-//			}
-//		} else {
-//			try {
-//				clientConnection.sendRawPacket(new byte[] {0});
-//			} catch (Exception e) {
-//				new IOException("Could not send unencrypted info to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
-//			}
-//		}
 	}
 	
 	private void onClientDisconnect(final ClientConnection clientConnection) {
