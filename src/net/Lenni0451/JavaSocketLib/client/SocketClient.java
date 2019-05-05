@@ -87,7 +87,6 @@ public class SocketClient {
 		
 		{ //Auto Encryption
 			int rsaKeyLength = RSACrypter.getRSAKeyLength();
-			System.out.println(rsaKeyLength);
 			
 			try {
 				KeyPair keyPair = RSACrypter.generateKeyPair(rsaKeyLength);
