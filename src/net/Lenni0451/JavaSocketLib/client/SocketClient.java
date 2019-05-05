@@ -94,6 +94,7 @@ public class SocketClient {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				DataOutputStream dos = new DataOutputStream(baos);
 				dos.writeInt(rsaKeyLength);
+				dos.writeInt(RSACrypter.getAESKeyLength());
 				dos.writeInt(keyPair.getPublic().getEncoded().length);
 				dos.write(keyPair.getPublic().getEncoded());
 				this.sendRawPacket(baos.toByteArray());

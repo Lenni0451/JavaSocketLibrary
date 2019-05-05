@@ -22,6 +22,7 @@ public class ClientConnection {
 
 	private PrivateKey decryptionKey = null;
 	private PublicKey encryptionKey = null;
+	private int aesKeyLength;
 	
 	private long latency = -1;
 	private boolean terminated = false;
@@ -37,6 +38,7 @@ public class ClientConnection {
 			this.terminateConnection();
 			throw new IllegalStateException("Socket is closed or not ready yet", e);
 		}
+		this.aesKeyLength = 256;
 	}
 	
 	public Socket getSocket() {
@@ -99,6 +101,14 @@ public class ClientConnection {
 		return this.encryptionKey;
 	}
 
+	public void setAESKeyLength(final int aesKeyLength) {
+		this.aesKeyLength = aesKeyLength;
+	}
+	
+	public int getAESKeyLength() {
+		return this.aesKeyLength;
+	}
+
 	
 	public void sendRawPacket(byte[] data) throws IOException {
 		if(this.terminated) {
@@ -107,7 +117,7 @@ public class ClientConnection {
 		
 		if(this.encryptionKey != null) {
 			try {
-				data = RSACrypter.encrypt(this.encryptionKey, data);
+				data = RSACrypter.encrypt(this.encryptionKey, data, aesKeyLength);
 			} catch (Exception e) {
 				new IOException("Could not encrypt packet data for client " + this.socket.getInetAddress().getHostAddress(), e).printStackTrace();
 			}

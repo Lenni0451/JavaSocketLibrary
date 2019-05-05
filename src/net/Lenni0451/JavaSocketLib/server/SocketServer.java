@@ -184,6 +184,8 @@ public class SocketServer {
 				ByteArrayInputStream bais = new ByteArrayInputStream(packet);
 				DataInputStream dis = new DataInputStream(bais);
 				int rsaKeyLength = dis.readInt();
+				int aesKeyLength = dis.readInt();
+				clientConnection.setAESKeyLength(aesKeyLength);
 				byte[] keyBytes = new byte[dis.readInt()];
 				dis.read(keyBytes);
 				KeyPair keyPair = RSACrypter.generateKeyPair(rsaKeyLength);
