@@ -97,6 +97,7 @@ public class SocketServer {
 								}
 							}
 							onClientDisconnect(clientConnection);
+							this.interrupt();
 						}
 					});
 					clientListener.start();
