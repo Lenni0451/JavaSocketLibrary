@@ -27,7 +27,6 @@ public class SocketServer {
 	private final int port;
 	private ServerSocket socket;
 	private int maxPacketSize = 32767;
-	private boolean useEncryption;
 	
 	private Thread socketAcceptor;
 	private Timer timer;
@@ -39,12 +38,7 @@ public class SocketServer {
 	private PacketRegister packetRegister;
 	
 	public SocketServer(final int port) {
-		this(port, true);
-	}
-	
-	public SocketServer(final int port, final boolean useEncryption) {
 		this.port = port;
-		this.useEncryption = useEncryption;
 		
 		this.clients = new HashMap<>();
 		this.eventListener = new ArrayList<>();
@@ -67,9 +61,6 @@ public class SocketServer {
 						for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
 							try {
 								serverEventListener.onSocketPreConnect(clientConnection);
-								if(!this.useEncryption) {
-									serverEventListener.onSocketConnectionEstablished(clientConnection);
-								}
 							} catch (Throwable t) {
 								new Exception("Unhandled exception in server event listener", t).printStackTrace();
 							}
@@ -126,7 +117,7 @@ public class SocketServer {
 			@Override
 			public void run() {
 				for(ClientConnection clientConnection : clients.keySet()) {
-					if((clientConnection.getEncryptionKey() != null && clientConnection.getDecryptionKey() != null) || !useEncryption) {
+					if((clientConnection.getEncryptionKey() != null && clientConnection.getDecryptionKey() != null)) {
 						clientConnection.sendPacket(new PingPacket(System.currentTimeMillis()));
 					}
 				}
@@ -168,31 +159,27 @@ public class SocketServer {
 		return this.maxPacketSize;
 	}
 	
-	public boolean isUsingEncryption() {
-		return this.useEncryption;
-	}
-	
 	public PacketRegister getPacketRegister() {
 		return this.packetRegister;
 	}
 	
 	
 	private void onClientConnect(final ClientConnection clientConnection) {
-		if(this.useEncryption) {
-			try {
-				KeyPair keyPair = RSACrypter.generateKeyPair(2048);
-				clientConnection.setDecryptionKey(keyPair.getPrivate());
-				clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
-			} catch (Exception e) {
-				new IOException("Could not send encryption key to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
-			}
-		} else {
-			try {
-				clientConnection.sendRawPacket(new byte[] {0});
-			} catch (Exception e) {
-				new IOException("Could not send unencrypted info to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
-			}
-		}
+//		if(this.useEncryption) {
+//			try {
+//				KeyPair keyPair = RSACrypter.generateKeyPair(2048);
+//				clientConnection.setDecryptionKey(keyPair.getPrivate());
+//				clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
+//			} catch (Exception e) {
+//				new IOException("Could not send encryption key to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
+//			}
+//		} else {
+//			try {
+//				clientConnection.sendRawPacket(new byte[] {0});
+//			} catch (Exception e) {
+//				new IOException("Could not send unencrypted info to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
+//			}
+//		}
 	}
 	
 	private void onClientDisconnect(final ClientConnection clientConnection) {
@@ -211,9 +198,17 @@ public class SocketServer {
 	}
 	
 	private void onRawPacketReceive(final ClientConnection clientConnection, byte[] packet) {
-		if(clientConnection.getEncryptionKey() == null && this.useEncryption) {
+		if(clientConnection.getEncryptionKey() == null) {
 			try {
-				clientConnection.setEncryptionKey(RSACrypter.initPublicKey(packet));
+				ByteArrayInputStream bais = new ByteArrayInputStream(packet);
+				DataInputStream dis = new DataInputStream(bais);
+				int rsaKeyLength = dis.readInt();
+				byte[] keyBytes = new byte[dis.readInt()];
+				dis.read(keyBytes);
+				KeyPair keyPair = RSACrypter.generateKeyPair(rsaKeyLength);
+				clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
+				clientConnection.setDecryptionKey(keyPair.getPrivate());
+				clientConnection.setEncryptionKey(RSACrypter.initPublicKey(keyBytes));
 				
 				{ //Call event
 					for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
@@ -225,13 +220,13 @@ public class SocketServer {
 					}
 				}
 			} catch (Exception e) {
-				new IOException("Could not create encryption key from client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
+				new IOException("Could not create encryption key from/for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
 				clientConnection.terminateConnection();
 			}
 			return;
 		}
 		
-		if(clientConnection.getDecryptionKey() != null && this.useEncryption) {
+		if(clientConnection.getDecryptionKey() != null) {
 			try {
 				packet = RSACrypter.decrypt(clientConnection.getDecryptionKey(), packet);
 			} catch (Exception e) {

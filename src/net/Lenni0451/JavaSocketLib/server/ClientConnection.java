@@ -105,7 +105,7 @@ public class ClientConnection {
 			throw new IllegalStateException("Client connection has been terminated");
 		}
 		
-		if(this.encryptionKey != null && this.server.isUsingEncryption()) {
+		if(this.encryptionKey != null) {
 			try {
 				data = RSACrypter.encrypt(this.encryptionKey, data);
 			} catch (Exception e) {

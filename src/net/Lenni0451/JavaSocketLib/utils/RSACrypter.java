@@ -1,6 +1,9 @@
 package net.Lenni0451.JavaSocketLib.utils;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -11,7 +14,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -23,17 +25,35 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class RSACrypter {
 	
-	public static int getMaxRSALength() throws NoSuchAlgorithmException {
-		return Cipher.getMaxAllowedKeyLength("RSA");
+	public static int getRSAKeyLength() {
+		int maxKeyLength = 2048;
+		try {
+			maxKeyLength = Cipher.getMaxAllowedKeyLength("RSA");
+			if(maxKeyLength > 2048) {
+				maxKeyLength = 2048;
+			}
+		} catch (Exception e) {
+			//Should never occur
+		}
+		return maxKeyLength;
 	}
 	
-	public static int getMaxAESLength() throws NoSuchAlgorithmException {
-		return Cipher.getMaxAllowedKeyLength("AES");
+	public static int getAESKeyLength() {
+		int maxKeyLength = 128;
+		try {
+			maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
+			if(maxKeyLength > 256) {
+				maxKeyLength = 256;
+			}
+		} catch (Exception e) {
+			//Should never occur
+		}
+		return maxKeyLength;
 	}
 	
 	public static byte[] encrypt(final PublicKey publicKey, byte[] toEncrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-		keyGenerator.init(256);
+		keyGenerator.init(getAESKeyLength());
 		SecretKey secretKey = keyGenerator.generateKey();
 		
 		Cipher cipher = Cipher.getInstance("AES");
@@ -45,15 +65,22 @@ public class RSACrypter {
 		byte[] keyBytes = cipher.doFinal(secretKey.getEncoded());
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		baos.write(keyBytes);
-		baos.write(toEncrypt);
+		DataOutputStream dos = new DataOutputStream(baos);
+		dos.writeInt(keyBytes.length);
+		dos.write(keyBytes);
+		dos.writeInt(toEncrypt.length);
+		dos.write(toEncrypt);
 		
 		return baos.toByteArray();
 	}
 	
-	public static byte[] decrypt(final PrivateKey privateKey, byte[] toDecrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		byte[] keyBytes = Arrays.copyOfRange(toDecrypt, 0, 256);
-		toDecrypt = Arrays.copyOfRange(toDecrypt, 256, toDecrypt.length);
+	public static byte[] decrypt(final PrivateKey privateKey, byte[] toDecrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
+		ByteArrayInputStream bais = new ByteArrayInputStream(toDecrypt);
+		DataInputStream dis = new DataInputStream(bais);
+		byte[] keyBytes = new byte[dis.readInt()];
+		dis.read(keyBytes);
+		toDecrypt = new byte[dis.readInt()];
+		dis.read(toDecrypt);
 		
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.DECRYPT_MODE, privateKey);
