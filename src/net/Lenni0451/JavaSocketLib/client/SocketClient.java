@@ -75,7 +75,7 @@ public class SocketClient {
 					
 					this.onPacketReceive(packet);
 				} catch (EOFException | SocketException | SocketTimeoutException e) {
-					;
+					break;
 				} catch (Exception e) {
 					new IOException("Could not receive packet", e).printStackTrace();
 					break;
