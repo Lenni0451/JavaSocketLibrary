@@ -23,6 +23,14 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class RSACrypter {
 	
+	public static int getMaxRSALength() throws NoSuchAlgorithmException {
+		return Cipher.getMaxAllowedKeyLength("RSA");
+	}
+	
+	public static int getMaxAESLength() throws NoSuchAlgorithmException {
+		return Cipher.getMaxAllowedKeyLength("AES");
+	}
+	
 	public static byte[] encrypt(final PublicKey publicKey, byte[] toEncrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
 		keyGenerator.init(256);

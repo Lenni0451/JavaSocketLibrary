@@ -67,6 +67,9 @@ public class SocketServer {
 						for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
 							try {
 								serverEventListener.onSocketPreConnect(clientConnection);
+								if(!this.useEncryption) {
+									serverEventListener.onSocketConnectionEstablished(clientConnection);
+								}
 							} catch (Throwable t) {
 								new Exception("Unhandled exception in server event listener", t).printStackTrace();
 							}

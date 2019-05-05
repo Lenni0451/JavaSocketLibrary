@@ -91,6 +91,9 @@ public class SocketClient {
 			for(ClientEventListener clientEventListener : this.eventListener.toArray(new ClientEventListener[0])) {
 				try {
 					clientEventListener.onPreConnect();
+					if(!this.useEncryption) {
+						clientEventListener.onConnectionEstablished();
+					}
 				} catch (Throwable t) {
 					new Exception("Unhandled exception in client event listener", t).printStackTrace();
 				}
