@@ -179,19 +179,23 @@ public class SocketServer {
 	}
 	
 	private void onRawPacketReceive(final ClientConnection clientConnection, byte[] packet) {
-		if(clientConnection.getEncryptionKey() == null) {
+		if(clientConnection.getEncryptionKey() == null && clientConnection.isUsingEncryption()) {
 			try {
-				ByteArrayInputStream bais = new ByteArrayInputStream(packet);
-				DataInputStream dis = new DataInputStream(bais);
-				int rsaKeyLength = dis.readInt();
-				int aesKeyLength = dis.readInt();
-				clientConnection.setAESKeyLength(aesKeyLength);
-				byte[] keyBytes = new byte[dis.readInt()];
-				dis.read(keyBytes);
-				KeyPair keyPair = RSACrypter.generateKeyPair(rsaKeyLength);
-				clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
-				clientConnection.setDecryptionKey(keyPair.getPrivate());
-				clientConnection.setEncryptionKey(RSACrypter.initPublicKey(keyBytes));
+				if(packet.length == 1) {
+					clientConnection.useNoEncryption();
+				} else {
+					ByteArrayInputStream bais = new ByteArrayInputStream(packet);
+					DataInputStream dis = new DataInputStream(bais);
+					int rsaKeyLength = dis.readInt();
+					int aesKeyLength = dis.readInt();
+					clientConnection.setAESKeyLength(aesKeyLength);
+					byte[] keyBytes = new byte[dis.readInt()];
+					dis.read(keyBytes);
+					KeyPair keyPair = RSACrypter.generateKeyPair(rsaKeyLength);
+					clientConnection.sendRawPacket(keyPair.getPublic().getEncoded());
+					clientConnection.setDecryptionKey(keyPair.getPrivate());
+					clientConnection.setEncryptionKey(RSACrypter.initPublicKey(keyBytes));
+				}
 				
 				{ //Call event
 					for(ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
@@ -209,7 +213,7 @@ public class SocketServer {
 			return;
 		}
 		
-		if(clientConnection.getDecryptionKey() != null) {
+		if(clientConnection.getDecryptionKey() != null && clientConnection.isUsingEncryption()) {
 			try {
 				packet = RSACrypter.decrypt(clientConnection.getDecryptionKey(), packet);
 			} catch (Exception e) {

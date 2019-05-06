@@ -23,6 +23,7 @@ public class ClientConnection {
 	private PrivateKey decryptionKey = null;
 	private PublicKey encryptionKey = null;
 	private int aesKeyLength;
+	private boolean useEncryption;
 	
 	private long latency = -1;
 	private boolean terminated = false;
@@ -39,6 +40,7 @@ public class ClientConnection {
 			throw new IllegalStateException("Socket is closed or not ready yet", e);
 		}
 		this.aesKeyLength = 256;
+		this.useEncryption = true;
 	}
 	
 	public Socket getSocket() {
@@ -108,6 +110,18 @@ public class ClientConnection {
 	public int getAESKeyLength() {
 		return this.aesKeyLength;
 	}
+	
+	public void useNoEncryption() {
+		if(this.encryptionKey != null || this.decryptionKey != null) {
+			throw new IllegalStateException("Encryption is already initialized");
+		}
+		
+		this.useEncryption = false;
+	}
+	
+	public boolean isUsingEncryption() {
+		return this.useEncryption;
+	}
 
 	
 	public void sendRawPacket(byte[] data) throws IOException {
@@ -115,7 +129,7 @@ public class ClientConnection {
 			throw new IllegalStateException("Client connection has been terminated");
 		}
 		
-		if(this.encryptionKey != null) {
+		if(this.encryptionKey != null && this.useEncryption) {
 			try {
 				data = RSACrypter.encrypt(this.encryptionKey, data, aesKeyLength);
 			} catch (Exception e) {
