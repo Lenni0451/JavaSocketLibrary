@@ -25,7 +25,7 @@ public class ClientConnection {
 	private int aesKeyLength;
 	private boolean useEncryption;
 	
-	private long latency = -1;
+	private long ping = -1;
 	private boolean terminated = false;
 	
 	public ClientConnection(final SocketServer server, final Socket socket) {
@@ -70,12 +70,12 @@ public class ClientConnection {
 		return false;
 	}
 	
-	public void updateLatency(final long latency) {
-		this.latency = latency;
+	public void updatePing(final long ping) {
+		this.ping = ping;
 	}
 	
-	public long getLatency() {
-		return this.latency;
+	public long getPing() {
+		return this.ping;
 	}
 	
 	
@@ -135,6 +135,9 @@ public class ClientConnection {
 			} catch (Exception e) {
 				new IOException("Could not encrypt packet data for client " + this.socket.getInetAddress().getHostAddress(), e).printStackTrace();
 			}
+		}
+		if(data.length > this.server.getMaxPacketSize()) {
+			throw new RuntimeException("Packet size over maximum: " + data.length + " > " + this.server.getMaxPacketSize());
 		}
 		this.dataOutputStream.writeInt(data.length);
 		this.dataOutputStream.write(data);

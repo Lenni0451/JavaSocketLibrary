@@ -255,6 +255,9 @@ public class SocketClient {
 				new IOException("Could not decrypt packet data", e).printStackTrace();
 			}
 		}
+		if(data.length > this.maxPacketSize) {
+			throw new RuntimeException("Packet size over maximum: " + data.length + " > " + this.maxPacketSize);
+		}
 		this.dataOutputStream.writeInt(data.length);
 		this.dataOutputStream.write(data);
 	}

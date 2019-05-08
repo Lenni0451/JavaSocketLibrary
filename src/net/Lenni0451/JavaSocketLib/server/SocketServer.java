@@ -229,7 +229,7 @@ public class SocketServer {
 			packetObject.readPacketData(dis);
 			
 			if(packetObject instanceof PingPacket) {
-				clientConnection.updateLatency(System.currentTimeMillis() - ((PingPacket) packetObject).getSystemTime());
+				clientConnection.updatePing(System.currentTimeMillis() - ((PingPacket) packetObject).getSystemTime());
 				return;
 			}
 			
