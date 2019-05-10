@@ -42,17 +42,14 @@ public class RSACrypter {
 		int maxKeyLength = 128;
 		try {
 			maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
-			if(maxKeyLength > 256) {
-				maxKeyLength = 256;
-			}
 		} catch (Exception e) {
 			//Should never occur
 		}
-		return maxKeyLength;
+		return maxKeyLength > 256 ? 256 : 128;
 	}
 	
 	public static byte[] encrypt(final PublicKey publicKey, final byte[] toEncrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
-		return encrypt(publicKey, toEncrypt, 256);
+		return encrypt(publicKey, toEncrypt, getAESKeyLength());
 	}
 
 	public static byte[] encrypt(final PublicKey publicKey, byte[] toEncrypt, final int aesKeyLength) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {

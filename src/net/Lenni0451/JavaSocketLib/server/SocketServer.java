@@ -117,7 +117,7 @@ public class SocketServer {
 			@Override
 			public void run() {
 				for(ClientConnection clientConnection : clients.keySet()) {
-					if((clientConnection.getEncryptionKey() != null && clientConnection.getDecryptionKey() != null)) {
+					if((clientConnection.getEncryptionKey() != null && clientConnection.getDecryptionKey() != null) || !clientConnection.isUsingEncryption()) {
 						clientConnection.sendPacket(new PingPacket(System.currentTimeMillis()));
 					}
 				}
