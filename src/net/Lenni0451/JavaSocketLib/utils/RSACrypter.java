@@ -57,7 +57,7 @@ public class RSACrypter {
 
 	public static byte[] encrypt(final PublicKey publicKey, byte[] toEncrypt, final int aesKeyLength) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
 		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-		keyGenerator.init(getAESKeyLength());
+		keyGenerator.init(aesKeyLength);
 		SecretKey secretKey = keyGenerator.generateKey();
 		
 		Cipher cipher = Cipher.getInstance("AES");

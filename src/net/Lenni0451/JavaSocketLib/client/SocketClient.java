@@ -204,7 +204,7 @@ public class SocketClient {
 			try {
 				packet = RSACrypter.decrypt(this.decryptionKey, packet);
 			} catch (Exception e) {
-				new IOException("Could not encrypt packet data", e).printStackTrace();
+				new IOException("Could not decrypt packet data", e).printStackTrace();
 			}
 		}
 		

@@ -163,6 +163,7 @@ public class SocketServer {
 		return this.packetRegister;
 	}
 	
+	
 	private void onClientDisconnect(final ClientConnection clientConnection) {
 		clientConnection.terminateConnection();
 		this.clients.remove(clientConnection);
@@ -265,7 +266,7 @@ public class SocketServer {
 			try {
 				clientConnection.sendRawPacket(packet);
 			} catch (Exception e) {
-				new Exception("Could broadcast raw packet to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
+				new Exception("Could not broadcast raw packet to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
 			}
 		}
 	}
@@ -275,7 +276,7 @@ public class SocketServer {
 			try {
 				clientConnection.sendPacket(packet);
 			} catch (Exception e) {
-				new Exception("Could broadcast packet to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
+				new Exception("Could not broadcast packet to client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
 			}
 		}
 	}
