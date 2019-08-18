@@ -91,7 +91,7 @@ public class SocketServer {
 									onRawPacketReceive(clientConnection, packet);
 								} catch (EOFException | SocketException | SocketTimeoutException e) {
 									break;
-								} catch (Exception e) {
+								} catch (Throwable e) {
 									new IOException("Could not receive packet for client " + clientConnection.getAddress().getHostAddress(), e).printStackTrace();
 									break;
 								}
