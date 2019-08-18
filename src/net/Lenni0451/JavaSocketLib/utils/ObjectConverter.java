@@ -15,11 +15,11 @@ public class ObjectConverter {
         return byteOut.toByteArray();
     }
     
-	public static Object byteArrayToObject(final byte[] input) throws IOException {
+	public static <T> T byteArrayToObject(final byte[] input) throws IOException {
         ByteArrayInputStream byteIn = new ByteArrayInputStream(input);
         ObjectInputStream objectIn = new ObjectInputStream(byteIn);
         try {
-        	return objectIn.readObject();
+        	return (T) objectIn.readObject();
 		} catch (Exception e) {}
         return null;
     }

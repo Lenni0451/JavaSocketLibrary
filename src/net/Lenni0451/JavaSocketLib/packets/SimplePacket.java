@@ -23,7 +23,7 @@ public abstract class SimplePacket implements IPacket {
 	public void readPacketData(DataInputStream dataInputStream) throws IOException {
 		byte[] rawData = new byte[dataInputStream.readInt()];
 		dataInputStream.read(rawData);
-		List<Object> list = (List<Object>) ObjectConverter.byteArrayToObject(rawData);
+		List<Object> list = ObjectConverter.byteArrayToObject(rawData);
 		this.readPacketData(list);
 	}
 	
