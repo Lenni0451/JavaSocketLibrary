@@ -108,7 +108,7 @@ public class SocketClient {
 					dos.write(keyPair.getPublic().getEncoded());
 					this.sendRawPacket(baos.toByteArray());
 				} catch (Exception e) {
-					new IOException("Could not create encryption key from server", e).printStackTrace();
+					new IOException("Could not create encryption key for server", e).printStackTrace();
 					this.disconnect();
 				}
 			}
