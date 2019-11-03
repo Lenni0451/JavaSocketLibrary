@@ -2,13 +2,13 @@ package net.Lenni0451.JavaSocketLib.client;
 
 import net.Lenni0451.JavaSocketLib.packets.IPacket;
 
-public abstract class ClientEventListener {
+public interface ClientEventListener {
 	
-	public void onPreConnect() {}
-	public void onConnectionEstablished() {}
-	public void onDisconnect() {}
+	public default void onPreConnect() {}
+	public default void onConnectionEstablished() {}
+	public default void onDisconnect() {}
 	
-	public void onRawPacketReceive(final byte[] packet) {}
-	public void onPacketReceive(final IPacket packet) {}
+	public default void onRawPacketReceive(final byte[] packet) {}
+	public default void onPacketReceive(final IPacket packet) {}
 	
 }
