@@ -1,6 +1,7 @@
 package net.Lenni0451.JavaSocketLib.packets;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -75,9 +76,12 @@ public class PacketRegister {
 	public void callPacketExecutor(final ClientConnection clientConnection, final IPacket packet) {
 		for(Object packetExecutor : this.packetExecutor) {
 			try {
-				Class<?> executorClass = ((packetExecutor instanceof Class)?((Class<?>) packetExecutor):(packetExecutor.getClass()));
-				Object executorInstance = ((packetExecutor instanceof Class)?(null):(packetExecutor));
+				Class<?> executorClass = ((packetExecutor instanceof Class) ? ((Class<?>) packetExecutor) : (packetExecutor.getClass()));
+				Object executorInstance = ((packetExecutor instanceof Class) ? (null) : (packetExecutor));
 				for(Method method : executorClass.getMethods()) {
+					if(executorInstance == null && !Modifier.isStatic(method.getModifiers())) {
+						continue;
+					}
 					Class<?>[] parameter = method.getParameterTypes();
 					if(parameter.length == 1 && parameter[0].equals(packet.getClass())) {
 						method.invoke(executorInstance, packet);
