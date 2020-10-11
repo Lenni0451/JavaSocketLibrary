@@ -82,6 +82,7 @@ public class PacketRegister {
                     if (executorInstance == null && !Modifier.isStatic(method.getModifiers())) {
                         continue;
                     }
+                    method.setAccessible(true);
                     Class<?>[] parameter = method.getParameterTypes();
                     if (parameter.length == 1 && parameter[0].equals(packet.getClass())) {
                         method.invoke(executorInstance, packet);
@@ -89,7 +90,7 @@ public class PacketRegister {
                         method.invoke(executorInstance, clientConnection, packet);
                     }
                 }
-            } catch (NullPointerException e) {
+            } catch (NullPointerException ignored) {
             } catch (Throwable t) {
                 new Exception("Unhandled exception in packet executor", t).printStackTrace();
             }
