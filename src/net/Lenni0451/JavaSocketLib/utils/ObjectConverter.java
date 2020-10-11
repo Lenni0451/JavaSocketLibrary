@@ -16,7 +16,7 @@ public class ObjectConverter {
         ObjectInputStream objectIn = new ObjectInputStream(byteIn);
         try {
             return (T) objectIn.readObject();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return null;
     }

@@ -66,7 +66,7 @@ public class ClientConnection {
             this.dataOutputStream.close();
             this.socket.close();
             return true;
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return false;
     }
@@ -157,7 +157,6 @@ public class ClientConnection {
             this.sendRawPacket(baos.toByteArray());
         } catch (Exception e) {
             new IOException("Could not serialize packet for " + this.address.getHostAddress(), e).printStackTrace();
-            return;
         }
     }
 
