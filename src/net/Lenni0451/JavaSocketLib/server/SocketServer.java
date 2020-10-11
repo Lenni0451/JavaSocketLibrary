@@ -11,7 +11,12 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.*;
 import java.security.KeyPair;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SocketServer {
 
@@ -31,8 +36,8 @@ public class SocketServer {
     public SocketServer(final int port) {
         this.port = port;
 
-        this.clients = new HashMap<>();
-        this.eventListener = new ArrayList<>();
+        this.clients = new ConcurrentHashMap<>();
+        this.eventListener = new CopyOnWriteArrayList<>();
         this.packetRegister = new PacketRegister();
     }
 
@@ -76,6 +81,7 @@ public class SocketServer {
                                         }
                                         continue;
                                     }
+                                    if (packetLength < 0) throw new EOFException();
                                     byte[] packet = new byte[packetLength];
                                     dataInputStream.read(packet);
 
@@ -93,8 +99,7 @@ public class SocketServer {
                     });
                     clientListener.start();
                 } catch (Exception e) {
-                    if (e instanceof EOFException || (e instanceof SocketException && e.getMessage().equalsIgnoreCase("Socket closed"))) {
-                    } else {
+                    if (!(e instanceof EOFException) && (!(e instanceof SocketException) || !e.getMessage().equalsIgnoreCase("Socket closed"))) {
                         new IOException("Unable to accept client socket", e).printStackTrace();
                     }
                 }

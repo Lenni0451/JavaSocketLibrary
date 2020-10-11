@@ -13,8 +13,8 @@ import java.net.SocketTimeoutException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class SocketClient {
 
@@ -43,7 +43,7 @@ public class SocketClient {
         this.port = port;
         this.useEncryption = useEncryption;
 
-        this.eventListener = new ArrayList<>();
+        this.eventListener = new CopyOnWriteArrayList<>();
         this.packetRegister = new PacketRegister();
     }
 
@@ -71,6 +71,7 @@ public class SocketClient {
                         }
                         continue;
                     }
+                    if (packetLength < 0) throw new EOFException();
                     byte[] packet = new byte[packetLength];
                     dataInputStream.read(packet);
 
@@ -126,7 +127,7 @@ public class SocketClient {
         try {
             this.socket.shutdownInput();
             this.socket.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -158,7 +159,7 @@ public class SocketClient {
     private void onDisconnect() {
         try {
             this.socket.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         this.packetListener.interrupt();
 
@@ -272,7 +273,6 @@ public class SocketClient {
             this.sendRawPacket(baos.toByteArray());
         } catch (Exception e) {
             new IOException("Could not serialize packet", e).printStackTrace();
-            return;
         }
     }
 
