@@ -6,7 +6,8 @@ import java.io.IOException;
 
 public interface IPacket {
 
-	public void writePacketData(final DataOutputStream dataOutputStream) throws IOException;
-	public void readPacketData(final DataInputStream dataInputStream) throws IOException;
-	
+    void writePacketData(final DataOutputStream dataOutputStream) throws IOException;
+
+    void readPacketData(final DataInputStream dataInputStream) throws IOException;
+
 }
